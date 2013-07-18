@@ -6,7 +6,11 @@ import time
 import sys
 
 
-## load lists
+## TODO:
+# argparse: filenames, reqlimit, etc.
+
+
+## load input list
 def load_list(filename):
     temp = list()
     try:
@@ -21,12 +25,24 @@ def load_list(filename):
     return temp
 
 imdb_ids = load_list('OS_de_IMDBid')
-ids = load_list('OS_de_osid')
-# imdb_count = 0
-# id_count = 0
+
+# load seen ids
+seen_ids = set()
+try:
+    seenfile = open('seen_ids', 'r')
+    for line in seenfile:
+        seen_ids.add(line.rstrip())
+    seenfile.close()
+except IOError:
+    print ('no seen file detected')
+
+
+req_limit = 1000
 total_count = 0
 successvar = 0
 things = list()
+infos = list()
+
 
 
 ## settings
@@ -49,19 +65,21 @@ def search_func(number):
     if search_sub['data'] is not False:
         successvar += 1
         data = search_sub['data'][0]
-        # print (data)
-        things.append( str(data['IDMovieImdb']) + '\t' + str(data['IDMovie']) + '\t' + str(data['SubDownloadLink']) + '\t' + str(data['SubFileName']) + '\n' )
+        infos.append(str(data))
+        things.append( str(data['IDMovieImdb']) + '\t' + str(data['IDMovie']) + '\t' + str(data['SubDownloadLink']) + '\t' + str(data['MovieName']) + '\t' + str(data['SubFileName']))
     else:
         pass
 
     return
 
-
-for i in range(0, 5):
-    search_func(imdb_ids[i])
-    # search_func(ids[i])
-    total_count += 1
-    time.sleep(1)
+i = 0
+while total_count < req_limit:
+    if imdb_ids[i] not in seen_ids:
+        search_func(imdb_ids[i])
+        seen_ids.add(imdb_ids[i])
+        total_count += 1
+        time.sleep(1)
+    i += 1
 
 
 logout = os_server.LogOut(token)
@@ -73,19 +91,29 @@ print ('Successful:', successvar)
 # print ('OS:', id_count)
 
 
-try:
-    outfile = open('test_links', 'w')
-except IOError:
-    sys.exit ('Could not open the output file: test_links')
+def writefile(filename, listname, append_or_write):
+    try:
+        outfile = open(filename, append_or_write)
+    except IOError:
+        sys.exit ('Could not open the output file:', filename)
 
-for thing in things:
-    outfile.write(thing)
+    for thing in listname:
+        outfile.write(thing + '\n')
 
-outfile.close()
+    outfile.close()
+
+writefile('test_things', things, 'a')
+writefile('seen_ids', seen_ids, 'w')
+writefile('test_infos', infos, 'a')
+
+
+
+
+
+### TRASH
 
 #temp = json.loads(str(logininfo))
 #print (temp['token'])
-
 
 
 # match = re.search(r"'token': '([0-9a-z]+?)'", str(logininfo))
@@ -94,3 +122,6 @@ outfile.close()
 #    print (token)
 
 
+# ids = load_list('OS_de_osid')
+# imdb_count = 0
+# id_count = 0
