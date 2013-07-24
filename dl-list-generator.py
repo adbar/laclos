@@ -24,7 +24,7 @@ except ValueError:
 
 fileset = set()
 for f in listdir('temp/'):
-    match = re.search(r'^([0-9]+)\.gz$', f)
+    match = re.search(r'^IMDBid_([0-9]+)$', f)
     if match:
         file_id = match.group(1)
         fileset.add(file_id)
