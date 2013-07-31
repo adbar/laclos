@@ -10,14 +10,14 @@ import argparse
 
 
 ## TODO:
-# argparse: filenames, time limit
 
 
 # argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--limit', dest='req_limit', help='maximum number of requests to be made', required=True)
-#parser.add_argument('-i', '--inputfile', dest='inputfile', help='name of the input file', required=True)
-#parser.add_argument('-p', '--plot', dest='plot', action="store_true", help='display results as a plot') # does not work in python3
+parser.add_argument('-i', '--inputfile', dest='inputfile', help='name of the input file', required=True)
+# parser.add_argument('-a', '--all', dest='all', action="store_true", help='process all possible ids')
+
 args = parser.parse_args()
 
 try: 
@@ -30,6 +30,7 @@ except ValueError:
 
 # time the whole script
 start_time = time.time()
+req_time = time.time()
 
 
 ## write files
@@ -49,12 +50,15 @@ def writefile(filename, listname, append_or_write):
 # Write all files and logs
 @atexit.register
 def the_end():
-    writefile('test_things', things, 'a')
-    writefile('seen_ids', seen_ids, 'w')
-    writefile('test_infos', infos, 'a')
+    print ('## END')
+    writefile('os_metadata', metadata, 'a')
+    writefile('os_seen_ids', seen_ids, 'w')
+    writefile('os_all-infos', infos, 'a')
     end_time = time.time() - start_time
-    print ('Execution time (secs): {0:.2f}' . format(end_time))
-    print ('Sec per request ratio: {0:.2f}' . format(end_time/total_count))
+    print ('# Total:\t\t\t', total_count)
+    print ('# Successful:\t\t\t', successvar)
+    print ('# Execution time (secs):\t{0:.2f}' . format(end_time))
+    print ('# Secs per request ratio:\t{0:.2f}' . format(end_time/total_count))
 
 
 ## load input list
@@ -71,12 +75,13 @@ def load_list(filename):
     listfile.close()
     return temp
 
-imdb_ids = load_list('OS_de_IMDBid')
+
+imdb_ids = load_list(args.inputfile)
 
 # load seen ids
 seen_ids = set()
 try:
-    seenfile = open('seen_ids', 'r')
+    seenfile = open('os_seen_ids', 'r')
     for line in seenfile:
         seen_ids.add(line.rstrip())
     seenfile.close()
@@ -87,7 +92,7 @@ except IOError:
 # vars
 total_count = 0
 successvar = 0
-things = list()
+metadata = list()
 infos = list()
 
 
@@ -106,10 +111,11 @@ token = logininfo['token']
 
 ## xmlrpc search function
 def search_func(number):
-    global things, successvar
+    global metadata, successvar
     params = [({'sublanguageid': 'ger', 'imdbid': number})]
     try:
         search_sub = os_server.SearchSubtitles(token, params)
+    # dont't hammer the server if there is a problem
     except xmlrpclib.ProtocolError as err:
         errmsg = "%r" % err
         print (errmsg)
@@ -120,7 +126,7 @@ def search_func(number):
         successvar += 1
         data = search_sub['data'][0]
         infos.append(str(data))
-        things.append( str(data['IDMovieImdb'].encode('utf-8')) + '\t' + str(data['IDMovie'].encode('utf-8')) + '\t' + str(data['SubDownloadLink'].encode('utf-8')) + '\t' + str(data['MovieName'].encode('utf-8')) + '\t' + str(data['SubFileName'].encode('utf-8')))
+        metadata.append( str(data['IDMovieImdb'].encode('utf-8')) + '\t' + str(data['IDMovie'].encode('utf-8')) + '\t' + str(data['SubDownloadLink'].encode('utf-8')) + '\t' + str(data['MovieName'].encode('utf-8')) + '\t' + str(data['SubFileName'].encode('utf-8')))
         # 
     else:
         pass
@@ -139,8 +145,9 @@ while total_count < req_limit:
                 total_count += 1
                 time.sleep(1)
         i += 1
-        if total_count != 0 and total_count % 500 == 0:
-            print (str(total_count) + 'th request', 'sec/request ratio: {0:.2f}' . format((time.time() - start_time)/total_count), sep='\t')
+        if total_count != 0 and total_count % 1000 == 0:
+            print (str(total_count) + 'th request', 'sec/request ratio: {0:.2f}' . format((time.time() - req_time)/total_count), sep='\t')
+            req_time = time.time()
     except IndexError:
         break
 
@@ -148,27 +155,3 @@ while total_count < req_limit:
 logout = os_server.LogOut(token)
 print ('logout:', logout)
 
-print ('Total:', total_count)
-print ('Successful:', successvar)
-# print ('IMDB:', imdb_count)
-# print ('OS:', id_count)
-
-
-
-
-
-### TRASH
-
-#temp = json.loads(str(logininfo))
-#print (temp['token'])
-
-
-# match = re.search(r"'token': '([0-9a-z]+?)'", str(logininfo))
-#if match:
-#    token = match.group(1)
-#    print (token)
-
-
-# ids = load_list('OS_de_osid')
-# imdb_count = 0
-# id_count = 0

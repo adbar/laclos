@@ -2,56 +2,82 @@
 
 
 from __future__ import print_function
+import datetime
 
-imdb_ids = list()
+# vars
 id_dict = dict()
+iso2 = set()
+iso3 = set()
+seen_ids = set()
+
+# filenames
+filename_append = datetime.datetime.now().strftime("%Y-%m-%d")
+
+# open and read seen IMDBids
+with open('seen_ids', 'r') as listfile:
+    for line in listfile:
+        seen_ids.add(line.rstrip())
 
 
-# open and read list 1
-try:
-    listfile = open('OS_dump_IMDBid', 'r')
-except IOError:
-    sys.exit ('Could not open the file containing the inputlist: OS_dump_IMDBid')
+# open and read dump ISO 2, write IMDBids
+with open('dump_ISO-2', 'r') as listfile:
+    for line in listfile:
+        columns = line.split('\t')
+        if len(columns) > 1 and 'de' in columns:
+            iso2.add(columns[0])
+
+print ('"de" ids found in ISO-2 file:\t', len(iso2))
 
 
-# open and write file 2
-try:
-    defile = open('OS_de_IMDBid', 'w')
-except IOError:
-    sys.exit ('Could not open the output file: OS_de_IMDBid')
+# open and read dump ISO 3
+counter = 0
+with open('dump_ISO-3', 'r') as listfile:
+    for line in listfile:
+        columns = line.split('\t')
+        if len(columns) > 1:
+            if 'ger' in columns:
+                iso3.add(columns[0])
+
+print ('"ger" ids found in ISO-3 file:\t', len(iso3))
 
 
-# loop
-for line in listfile:
-    columns = line.split('\t')
-    if 'de' in columns:
-        imdb_ids.append(columns[0])
-        defile.write(columns[0] + "\n")
-listfile.close()
-defile.close()
+# differences of both sets
+print ('union ISO-2 ISO-3:\t\t', len(set.union(iso2, iso3)))
+print ('intersection ISO-2 ISO-3:\t', len(set.intersection(iso2, iso3)))
+print ('difference ISO-2 ISO-3:\t\t', len(set.difference(iso2, iso3)))
 
 
-# open and read list 2 -> dict
-try:
-    listfile = open('OS_dump_export-movie', 'r')
-except IOError:
-    sys.exit ('Could not open the file containing the inputlist: OS_dump_export-movie')
+# write union
+union = set.union(iso2, iso3)
+with open('OS_de-ger_union_IMDBids_' + filename_append, 'w') as destfile:
+    for item in union:
+        destfile.write(item + "\n")
 
-for line in listfile:
-    columns = line.split('\t')
-    # it's not like they say, we need the OSid and not the IMDBid
-    id_dict[columns[0]] = columns[1]
+# seen_ids
+counter = 0
+with open('new_ids_' + filename_append, 'a') as destfile:
+    for item in union:
+        if item not in seen_ids:
+            destfile.write(item + "\n")
+            counter += 1
 
-listfile.close()
+print ('new ids:\t\t\t', counter)
 
-# open and write file 2
-try:
-    defile = open('OS_de_osid', 'w')
-except IOError:
-    sys.exit ('Could not open the output file: OS_de_osid')
 
-for item in imdb_ids:
-    if item in id_dict:
-        defile.write(id_dict[item] + '\n')
+# open and read movie dump to dict
+with open('dump_movies', 'r') as listfile:
+    for line in listfile:
+        columns = line.split('\t')
+        if len(columns) > 1:
+            # it's not like they say, we need the OSid and not the IMDBid
+            id_dict[columns[1]] = columns[0]
 
-defile.close()
+
+# open and write OSids
+with open('OS_de_osid_' + filename_append, 'w') as destfile:
+    for item in union:
+        if item in id_dict:
+            destfile.write(id_dict[item] + '\n')
+
+
+
