@@ -23,7 +23,7 @@ from os import listdir
 
 # argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('--split-sentences', dest='split', action="store_true", help='split the sentences')
+parser.add_argument('--split-sentences', dest='sentsplit', action="store_true", help='split the sentences')
 args = parser.parse_args()
 
 
@@ -46,7 +46,10 @@ for filename in listdir('download/test/'): #  test/
             lines = f.read().splitlines()
 
         # file for cleaned text in write mode
-        cleanedname = filename + '_cleaned'
+        if args.sentsplit:
+            cleanedname = filename + '_cleaned_sent-split'
+        else:
+            cleanedname = filename + '_cleaned_bare-lines'
         try:
             outputfile = open('test/' + cleanedname, 'w')
             # outputfile = codecs.open('test/' + cleanedname, encoding='utf-8', mode='w')
@@ -92,9 +95,6 @@ for filename in listdir('download/test/'): #  test/
 
             # skip empty lines
             if line:
-            # skip subtitle source announcement
-                    # skip subtitles number and times
-                    if not subnumber.match(line) and not subtime.match(line) and not subannounce.search(line):
 
                 # MicroDVD
                 if texttype == 1:
@@ -155,7 +155,7 @@ for filename in listdir('download/test/'): #  test/
                         line = line + ' .'
 
 
-                    if args.split:
+                    if args.sentsplit:
                         # sentence buffer switch is on
                         if line:
                             if sentence_buffer:
@@ -165,7 +165,7 @@ for filename in listdir('download/test/'): #  test/
                     else:
                         clean_lines.append(line)
 
-        if args.split:
+        if args.sentsplit:
             # write the sentence buffer at the end
             # lookahead and lookbehind: do not split dates : r'.+?(?<![0-9])[.!?](?![0-9\.]+)'
             for sentence in re.findall(r'[A-ZÄÖÜa-zäöü0-9"].+?(?<![0-9])[\.!\?]+(?![0-9]+)', sentence_buffer):

@@ -16,6 +16,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--limit', dest='req_limit', help='maximum number of requests to be made', required=True)
 parser.add_argument('-i', '--inputfile', dest='inputfile', help='name of the input file', required=True)
+parser.add_argument('--sleep', dest='sleep', help='sleeping time (in secs)', required=True)
 # parser.add_argument('-a', '--all', dest='all', action="store_true", help='process all possible ids')
 
 args = parser.parse_args()
@@ -24,6 +25,12 @@ try:
     req_limit = int(args.req_limit)
 except ValueError:
     print ('max. number of requests is not an integer')
+    sys.exit()
+
+try: 
+    sleep = float(args.sleep)
+except ValueError:
+    print ('sleep value is not a float')
     sys.exit()
 
 
@@ -119,17 +126,20 @@ def search_func(number):
     except xmlrpclib.ProtocolError as err:
         errmsg = "%r" % err
         print (errmsg)
-        time.sleep(60)
+        time.sleep(30)
         return 0
     # print (search_sub)
-    if search_sub['data'] is not False:
-        successvar += 1
-        data = search_sub['data'][0]
-        infos.append(str(data))
-        metadata.append( str(data['IDMovieImdb'].encode('utf-8')) + '\t' + str(data['IDMovie'].encode('utf-8')) + '\t' + str(data['SubDownloadLink'].encode('utf-8')) + '\t' + str(data['MovieName'].encode('utf-8')) + '\t' + str(data['SubFileName'].encode('utf-8')))
+    try:
+        if search_sub['data'] is not False:
+            successvar += 1
+            data = search_sub['data'][0]
+            infos.append(str(data))
+            metadata.append( str(data['IDMovieImdb'].encode('utf-8')) + '\t' + str(data['IDMovie'].encode('utf-8')) + '\t' + str(data['SubDownloadLink'].encode('utf-8')) + '\t' + str(data['MovieName'].encode('utf-8')) + '\t' + str(data['SubFileName'].encode('utf-8')))
         # 
-    else:
-        pass
+        else:
+            return 0
+    except KeyError:
+        return 0
 
     return 1
 
@@ -137,19 +147,21 @@ def search_func(number):
 ## main loop
 i = 0
 while total_count < req_limit:
+    total_count += 1
     try:
         if imdb_ids[i] not in seen_ids:
             result = search_func(imdb_ids[i])
             if result == 1:
                 seen_ids.add(imdb_ids[i])
-                total_count += 1
-                time.sleep(1)
         i += 1
-        if total_count != 0 and total_count % 1000 == 0:
-            print (str(total_count) + 'th request', 'sec/request ratio: {0:.2f}' . format((time.time() - req_time)/total_count), sep='\t')
-            req_time = time.time()
     except IndexError:
         break
+    # else ?
+    if total_count != 0 and total_count % 1000 == 0:
+            print (str(total_count) + 'th request', str(successvar) + ' successes','sec/request ratio: {0:.2f}' . format((time.time() - req_time)/1000), sep='\t')
+            req_time = time.time()
+
+    time.sleep(sleep)
 
 
 logout = os_server.LogOut(token)
