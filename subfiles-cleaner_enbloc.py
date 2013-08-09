@@ -15,7 +15,6 @@ from os import listdir
 # texttype [Script Info] problem: 1890383
 # 99669 quotes problem
 
-# unicode ?
 # GERMAN
 # ª
 # Bad ones: 1055792, 770828
@@ -24,6 +23,7 @@ from os import listdir
 # argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--split-sentences', dest='sentsplit', action="store_true", help='split the sentences')
+parser.add_argument('-d', '--dir', dest='dir', help='directory where the files are', required=True)
 args = parser.parse_args()
 
 
@@ -36,13 +36,13 @@ subannounce = re.compile(r'Subtitles downloaded from|\.\.\:\:|Best watched using
 
 
 # loop through the existing files
-for filename in listdir('download/test/'): #  test/
+for filename in listdir(args.dir): #  test/ korpus/test/
 
     # sanity check on file name
-    if re.match(r'IMDBid_[0-9]+$', filename):
+    if re.match(r'IMDBid_[0-9]+_utf-8$', filename):
 
         # open and read input file
-        with open('download/test/' + filename, 'r') as f: #  test/
+        with open(args.dir + filename, 'r') as f: #  test/ korpus/test/
             lines = f.read().splitlines()
 
         # file for cleaned text in write mode
@@ -51,7 +51,7 @@ for filename in listdir('download/test/'): #  test/
         else:
             cleanedname = filename + '_cleaned_bare-lines'
         try:
-            outputfile = open('test/' + cleanedname, 'w')
+            outputfile = open(args.dir + cleanedname, 'w') # test/
             # outputfile = codecs.open('test/' + cleanedname, encoding='utf-8', mode='w')
         except IOError:
             sys.exit ('Could not open output file: ' + cleanedname)
@@ -86,7 +86,7 @@ for filename in listdir('download/test/'): #  test/
             else:
                 texttype = 0
         except IndexError:
-            print (filename)
+            print ('Empty file ?', filename)
             continue
 
         # print (filename, lines[0], texttype, sep='\t')
