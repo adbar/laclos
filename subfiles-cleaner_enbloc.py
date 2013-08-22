@@ -12,18 +12,17 @@ from os import listdir
 
 
 ## TODO:
-# texttype [Script Info] problem: 1890383
-# 99669 quotes problem
 
-# GERMAN
-# ª
-# Bad ones: 1055792, 770828
+# 10208 ?
+# whole frame and then filter ?
 
 
 # argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--split-sentences', dest='sentsplit', action="store_true", help='split the sentences')
-parser.add_argument('-d', '--dir', dest='dir', help='directory where the files are', required=True)
+parser.add_argument('--input-dir', dest='inputdir', help='directory where the input files are', required=True)
+parser.add_argument('--output-dir', dest='outputdir', help='directory where the output files are to be stored', required=True)
+parser.add_argument('--blacklist', dest='blacklist', help='file containing the blacklist')
 args = parser.parse_args()
 
 
@@ -31,18 +30,70 @@ args = parser.parse_args()
 # regexes
 subnumber = re.compile(r'[0-9]+$')
 subtime = re.compile(r'[0-9]{2}\:[0-9]{2}\:[0-9]{1,2}\,[0-9]{2,3} --> [0-9]{2}\:[0-9]{2}\:[0-9]{1,2}\,[0-9]{2,3}')
-subannounce = re.compile(r'Subtitles downloaded from|\.\.\:\:|Best watched using|CAPTIONING MADE POSSIBLE BY|MGM/UA HOME ENTERTAINMENT INC|Deutsche Untertitel für|SubCentral|tv4user|visit www\.|ripped by|subbed by|Subtitles by|Übersetzt von|Überarbeitet von|Angepasst von|Untertitel:|s[0-9]+e[0-9]+|^OCR', re.IGNORECASE)
+# 1: match
+unwanted1 = re.compile(r'Subtitles downloaded from|Downloaded From|Best watched using|CAPTIONING MADE POSSIBLE BY|MGM/UA HOME ENTERTAINMENT INC|Deutsche Untertitel|visit www\.|ripped by|subbed by|Sync by|Subtitles by|Thx to|Übersetzt von|Überarbeitet von|Angepasst von|Englische Vorlage von|Resync to|Untertitel|Übersetzung|Transkript|Korrektur|Timings|OCR|Bisher bei|Zuvor bei|GmbH|Copyright |http://|FPS|We want more|Anlaufstelle für|Präsentiert|DVD-Untertitel|DVD scripts|T H E|[_+]|-  \|Africa\|  - Bringing|[0-9]\) |in Zusammenarbeit mit$|Eure Anlaufstellen für$|deutsche HQ-Subs.|Normalerweise hat Qualität ihren Preis ...$|doch bei uns kriegt ihr sie umsonst!', re.IGNORECASE)
 
+# 2: search
+unwanted2 = re.compile(r'Deutsche Untertitel|German Subtitles|s[0-9]+e[0-9]+|SubCentral|tv4user|LOST|Staffel [0-9]|Season [0-9]|tvfreaks.to|E N J O Y|\.srt|\.\.::| visit |S u b C e n t r a l . d e|www\.|dTV |ripped by|subbed by|Sync by|SDI Media Group', re.IGNORECASE)
+
+# _ ?
+# _ _ / _ _
+# FREMDSPRACHE ?
+# lnstrumentalmusik im Hintergrund
+
+
+## Regexes by Berthold Ulreich
+#ur'(angepasst|anpassung)([/:]|\s(von|durch)|)',
+#ur'(korrektur|korrigiert|deutsch|untertitel)([/:]|</?[^<>]+>|\s(von|durch))',
+#ur'überarbeit(et|ung)([/:]|\s(von|durch)|)',
+#r'(rip|sub|synch?ro|syncroni[sz]ed|sync|transcript|conformed|caption(s|ing))([:/]|\sby)',
+#r'^subti?t?l?e?s?$',
+#r'(bisher|zuvor|zuletzt)\s(bei|auf)',
+#r'was\sbisher\sgeschah'
+#r'^[a-z]$',
+#r'=+-+',
+#ur'präsentiert([:]|\svon)',
+#ur'(=+-+=*|=*-+=+)\s+präsentiert',
+#ur'präsentiert\.\.\.+',
+#ur'<i>¶|¶</i>',
+#r'~',
+# e-mail Addressen
+# r'divx|xvid',
+# ur'für\swww\S+\.de',
+# r'\]\[[^\]\[]+\]\[',
+#r'u[ks]-serien',
+#r'::+',
+#ur'©|\(c\)',
+#r'original:',
+#r'(drehbuch|regie|text|produ[ck]tion|synch?ronisation)(:|\svon)',
+#ur'°\.°',
+#r'german',
+#r'[0-9][0-]/[0-9][0-9][0-9][0-9]',
+#r'hr\.pdtv',
+#ur'^für$',
+#ur'willow|staubsauger|datai|maone|angeldream|arigold|buffy2500|dreumex|randall flagg|där fürst|riorizor|mosfilm|sdi media group|zerocl|deepthought42|charlie°|dehoh|urgh! argh|kakarott|crazy.nugget|tv4u|germansubs|opensubtitles|visiontext|tv4user|cimbom1905|maexchen|tvfreaks|delabambi|kristin gerdes|titra-wien|anke watson|fatbrat|velious|siralos|threepwood|zerotollerance|german sdh|eggmaster|mardermann|vicomedia|asenkerschbaumer|hörgeschädigte|gelula|schoker88|staubsauger1000|dagorcai|juppjulasch|subnews|fansub|arigold|wieni07|dagorcai|lord-homer|kezia|l1nk|setup1503|melsmiley|3xtrem3|para\.llax|phiber|jazzhead|ycheah|geysir|cyoo|siralos|revan|schoker|tngs|blubmöp|doggydog|nub4u|swini|ooinsaneoo|redfox|knochenbein|schnapsteufel|lamodus|anddro\+',
+
+
+# process blacklist
+blacklist = set()
+if args.blacklist:
+    with open(args.blacklist, 'r') as blackfh:
+        blacklist = blackfh.read().splitlines()
 
 
 # loop through the existing files
-for filename in listdir(args.dir): #  test/ korpus/test/
+for filename in listdir(args.inputdir): #  test/ korpus/test/
 
     # sanity check on file name
-    if re.match(r'IMDBid_[0-9]+_utf-8$', filename):
+    filecheck = re.compile(r'IMDBid_([0-9]+)_utf-8$')
+    if filecheck.match(filename):
+
+        # skip if the file has been blacklisted
+        if filecheck.match(filename).group(1) in blacklist:
+            continue
 
         # open and read input file
-        with open(args.dir + filename, 'r') as f: #  test/ korpus/test/
+        with open(args.inputdir + filename, 'r') as f: #  test/ korpus/test/
             lines = f.read().splitlines()
 
         # file for cleaned text in write mode
@@ -51,7 +102,7 @@ for filename in listdir(args.dir): #  test/ korpus/test/
         else:
             cleanedname = filename + '_cleaned_bare-lines'
         try:
-            outputfile = open(args.dir + cleanedname, 'w') # test/
+            outputfile = open(args.outputdir + cleanedname, 'w') # test/
             # outputfile = codecs.open('test/' + cleanedname, encoding='utf-8', mode='w')
         except IOError:
             sys.exit ('Could not open output file: ' + cleanedname)
@@ -80,7 +131,8 @@ for filename in listdir(args.dir): #  test/ korpus/test/
                 texttype = 3
                 sami_flag = 0
             # SSA
-            elif re.match(r'﻿\[Script Info\]', lines[0]):
+            # elif re.match(r'﻿\[Script Info\]', lines[0]):
+            elif re.search(r'﻿﻿[a-z]', lines[0]):
                 texttype = 4
             # default
             else:
@@ -89,7 +141,7 @@ for filename in listdir(args.dir): #  test/ korpus/test/
             print ('Empty file ?', filename)
             continue
 
-        # print (filename, lines[0], texttype, sep='\t')
+        print (filename, lines[0], texttype, sep='\t')
 
         for line in lines:
 
@@ -104,15 +156,15 @@ for filename in listdir(args.dir): #  test/ korpus/test/
                 # SubViewer
                 elif texttype == 2:
                     if re.match (r'[0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]{2},[0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]{2}', line) or re.match(r'\[[A-Z ]+\]', line):
-                        line = ''
-                        # continue
+                        # line = ''
+                        continue
                 # SAMI
                 elif texttype == 3:
                     if sami_flag == 0:
                         if re.match(r'<BODY>', line):
                             sami_flag = 1
-                        line = ''
-                        # continue
+                        # line = ''
+                        continue
                     else:
                         line = re.sub(r'</?.+?>', ' ', line)
                         line = line.replace('&nbsp;', ' ')
@@ -124,7 +176,8 @@ for filename in listdir(args.dir): #  test/ korpus/test/
                 elif texttype == 4:
                     if not re.match(r'Dialogue: ', line):
                         # print (line)
-                        line = ''
+                        # line = ''
+                        continue
                     else:
                         line = re.sub(r'Dialogue:.+?0,,', '', line)
                         # Dialogue: Marked=0,0:01:33.47,0:01:37.47,Default,NTP,0000,0000,0000,!Effect,
@@ -135,7 +188,8 @@ for filename in listdir(args.dir): #  test/ korpus/test/
 
                 # skip subtitle source announcement
                 # skip subtitles number and times
-                if not subnumber.match(line) and not subtime.match(line) and not subannounce.search(line):
+                # skip lines where there are more non-word characters than word characters
+                if not subnumber.match(line) and not subtime.match(line) and not unwanted1.match(line) and not unwanted2.search(line) and not len(re.findall(r'[^\w\s]', line)) > len(re.findall(r'[\w\s]', line)) and not len(re.findall(r'[\s]', line)) >= len(re.findall(r'[\w]', line)):
 
                     # remove diverse tags
                     # str.replace is much faster
@@ -192,7 +246,7 @@ for filename in listdir(args.dir): #  test/ korpus/test/
                     queue = []
 
                 # sentence tests
-                if not subannounce.search(sentence):
+                if not unwanted1.match(sentence) and not unwanted2.search(sentence) and not len(re.findall(r'[^\w\s]', sentence)) > len(re.findall(r'[\w\s]', sentence)) and not len(re.findall(r'[\s]', sentence)) >= len(re.findall(r'[\w]', sentence)):
 
                     # if quote count is not even
                     if sentence.count('"') % 2 != 0:
