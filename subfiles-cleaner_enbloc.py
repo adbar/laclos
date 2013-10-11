@@ -23,6 +23,7 @@ parser.add_argument('--split-sentences', dest='sentsplit', action="store_true", 
 parser.add_argument('--input-dir', dest='inputdir', help='directory where the input files are', required=True)
 parser.add_argument('--output-dir', dest='outputdir', help='directory where the output files are to be stored', required=True)
 parser.add_argument('--blacklist', dest='blacklist', help='file containing the blacklist')
+parser.add_argument('--xml-output', dest='xmloutput', action="store_true", help='split the sentences')
 args = parser.parse_args()
 
 
@@ -31,10 +32,11 @@ args = parser.parse_args()
 subnumber = re.compile(r'[0-9]+$')
 subtime = re.compile(r'[0-9]{2}\:[0-9]{2}\:[0-9]{1,2}\,[0-9]{2,3} --> [0-9]{2}\:[0-9]{2}\:[0-9]{1,2}\,[0-9]{2,3}')
 # 1: match
-unwanted1 = re.compile(r'Subtitles downloaded from|Downloaded From|Best watched using|CAPTIONING MADE POSSIBLE BY|MGM/UA HOME ENTERTAINMENT INC|Deutsche Untertitel|visit www\.|ripped by|subbed by|Sync by|Subtitles by|Thx to|Übersetzt von|Überarbeitet von|Angepasst von|Englische Vorlage von|Resync to|Untertitel|Übersetzung|Transkript|Korrektur|Timings|OCR|Bisher bei|Zuvor bei|GmbH|Copyright |http://|FPS|We want more|Anlaufstelle für|Präsentiert|DVD-Untertitel|DVD scripts|T H E|[_+]|-  \|Africa\|  - Bringing|[0-9]\) |in Zusammenarbeit mit$|Eure Anlaufstellen für$|deutsche HQ-Subs.|Normalerweise hat Qualität ihren Preis ...$|doch bei uns kriegt ihr sie umsonst!', re.IGNORECASE)
+unwanted1 = re.compile(ur'Subtitles downloaded from|Downloaded From|Best watched using|CAPTIONING MADE POSSIBLE BY|MGM/UA HOME ENTERTAINMENT INC|Deutsche Untertitel|visit www\.|ripped by|subbed by|Sync by|Subtitles by|Transcript by|Thx to|.bersetzung|.bersetzt von|.berarbeitet von|Angepasst von|Englische Vorlage von|Resync to|Untertitel|.bersetzung|Trans[ck]ript|Korrektur|Timings|OCR|Bisher bei|Zuvor bei|GmbH|Copyright |http://|FPS|We want more|DVD-Untertitel|DVD scripts|T H E|[_+]|-  \|Africa\|  - Bringing|[0-9]\) |in Zusammenarbeit mit$|Eure Anlaufstellen für$|deutsche HQ-Subs.|Normalerweise hat Qualität ihren Preis ...$|doch bei uns kriegt ihr sie umsonst!|taken from', re.IGNORECASE)
+# Anlaufstelle für|
 
 # 2: search
-unwanted2 = re.compile(r'Deutsche Untertitel|German Subtitles|s[0-9]+e[0-9]+|SubCentral|tv4user|LOST|Staffel [0-9]|Season [0-9]|tvfreaks.to|E N J O Y|\.srt|\.\.::| visit |S u b C e n t r a l . d e|www\.|dTV |ripped by|subbed by|Sync by|SDI Media Group', re.IGNORECASE)
+unwanted2 = re.compile(ur'(sche|für) (HQ-)?Untertitel|German Subtitles|s[0-9]+e[0-9]+|SubCentral|tv4user|LOST|Staffel [0-9]|Season [0-9]|tvfreaks.to|E N J O Y|\.srt|\.\.::| visit |S u b C e n t r a l . d e|www\.|dTV |ripped by|subbed by|Sync by|SD[Il] Media Group|Präsentiert von|Untertitelung|Transcript:|original|.berarbeitung:', re.IGNORECASE)
 
 # _ ?
 # _ _ / _ _
@@ -131,8 +133,8 @@ for filename in listdir(args.inputdir): #  test/ korpus/test/
                 texttype = 3
                 sami_flag = 0
             # SSA
-            # elif re.match(r'﻿\[Script Info\]', lines[0]):
-            elif re.search(r'﻿﻿[a-z]', lines[0]):
+            elif re.match(r'﻿\[Script Info\]', lines[0]):
+            # elif re.search(r'﻿﻿[a-z]', lines[0]):
                 texttype = 4
             # default
             else:
@@ -178,12 +180,15 @@ for filename in listdir(args.inputdir): #  test/ korpus/test/
                         # print (line)
                         # line = ''
                         continue
+                    elif re.search(r'SYNAPSE  pxxx', line):
+                        continue
                     else:
                         line = re.sub(r'Dialogue:.+?0,,', '', line)
                         # Dialogue: Marked=0,0:01:33.47,0:01:37.47,Default,NTP,0000,0000,0000,!Effect,
                         # print (line)
                         line = re.sub(r'Dialogue:.+?Effect,', '', line)
                         line = line.replace('\N', ' ')
+                        line = line.replace('\\n', ' ')
                         line = re.sub(r'\{.+?\}', '', line)
 
                 # skip subtitle source announcement
@@ -199,15 +204,23 @@ for filename in listdir(args.inputdir): #  test/ korpus/test/
                         line = line.replace('o/~', '')
                         line = line.replace('~', '')
                         line = line.replace('[br]', ' ')
-                        line = line.replace('[', '')
-                        line = line.replace(']', '')
-                        line = line.replace('(', '')
-                        line = line.replace(')', '')
                         line = line.replace('#', '')
+                        ## regex replace: [] and ()
+                        if args.xmloutput:
+                            line = re.sub(r'[\[\(](.+?)[\)\]]', r'<s type="other">\1</s>', line)
+                        else:
+                            line = line.replace('[', '')
+                            line = line.replace(']', '')
+                            line = line.replace('(', '')
+                            line = line.replace(')', '')
+
 
                     if texttype != 3 and re.match(r'[A-ZÄÖÜ ]+$', line):
                         line = line + ' .'
 
+                    # strip spaces
+                    line = re.sub(r'\s+', ' ', line)
+                    line = line.strip()
 
                     if args.sentsplit:
                         # sentence buffer switch is on
