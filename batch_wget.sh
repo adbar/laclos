@@ -1,12 +1,10 @@
 #!/bin/bash
 
 
-# TODO:
-# check if file ids are already there
+### LOCAL
 
-
-cut -f1 things_500 > imdbids
-cut -f3 things_500 > gzlist
+cut -f1 set_1 > imdbids
+cut -f2 set_1 > gzlist
 
 idlist=( `cat "imdbids" `)
 gzlist=( `cat "gzlist" `)
@@ -31,9 +29,11 @@ for id in "${idlist[@]}"; do
     wget -a wget.log -nv ${gzlist[i]} --limit-rate=100k -O temp/$downloadname
     gunzip -c temp/$downloadname > temp/$srtname
 
-    sleep 2
+    sleep 1
     ((i++))
 done
+
+rm imdbids gzlist
 
 
 

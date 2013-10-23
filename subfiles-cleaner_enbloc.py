@@ -27,22 +27,30 @@ parser.add_argument('--xml-output', dest='xmloutput', action="store_true", help=
 args = parser.parse_args()
 
 
+#######
 
-# regexes
+### REGEXES
+
 subnumber = re.compile(r'[0-9]+$')
 subtime = re.compile(r'[0-9]{2}\:[0-9]{2}\:[0-9]{1,2}\,[0-9]{2,3} --> [0-9]{2}\:[0-9]{2}\:[0-9]{1,2}\,[0-9]{2,3}')
+
 # 1: match
-unwanted1 = re.compile(ur'Subtitles downloaded from|Downloaded From|Best watched using|CAPTIONING MADE POSSIBLE BY|MGM/UA HOME ENTERTAINMENT INC|Deutsche Untertitel|visit www\.|ripped by|subbed by|Sync by|Subtitles by|Transcript by|Thx to|.bersetzung|.bersetzt von|.berarbeitet von|Angepasst von|Englische Vorlage von|Resync to|Untertitel|.bersetzung|Trans[ck]ript|Korrektur|Timings|OCR|Bisher bei|Zuvor bei|GmbH|Copyright |http://|FPS|We want more|DVD-Untertitel|DVD scripts|T H E|[_+]|-  \|Africa\|  - Bringing|[0-9]\) |in Zusammenarbeit mit$|Eure Anlaufstellen für$|deutsche HQ-Subs.|Normalerweise hat Qualität ihren Preis ...$|doch bei uns kriegt ihr sie umsonst!|taken from', re.IGNORECASE)
+unwanted1 = re.compile(ur'Subtitles downloaded from|Downloaded From|Best watched using|CAPTIONING MADE POSSIBLE BY|MGM/UA HOME ENTERTAINMENT INC|Deutsche Untertitel|ripped by|subbed by|Sync by|Subtitles by|Transcript by|Thx to|.bersetzung:?|.bersetzt von|.berarbeitet von|Angepasst von|Englische Vorlage von|Resync to|Untertitel:?|Trans[ck]ript:?|Korrektur:?|Synchro:?|Anpassung:?|Produktion:?|Timings:?|original:?|.berarbeitung:?|OCR|Bisher bei|GmbH|Copyright |http://|FPS|We want more|DVD-Untertitel|DVD scripts|T H E|[_+]|-  \|Africa\|  - Bringing|[0-9]\) |in Zusammenarbeit mit$|Eure Anlaufstellen für$|deutsche HQ-Subs.|Normalerweise hat Qualität ihren Preis ...$|doch bei uns kriegt ihr sie umsonst!|taken from', re.IGNORECASE)
 # Anlaufstelle für|
 
 # 2: search
-unwanted2 = re.compile(ur'(sche|für) (HQ-)?Untertitel|German Subtitles|s[0-9]+e[0-9]+|SubCentral|tv4user|LOST|Staffel [0-9]|Season [0-9]|tvfreaks.to|E N J O Y|\.srt|\.\.::| visit |S u b C e n t r a l . d e|www\.|dTV |ripped by|subbed by|Sync by|SD[Il] Media Group|Präsentiert von|Untertitelung|Transcript:|original|.berarbeitung:', re.IGNORECASE)
+unwanted2 = re.compile(ur'www|(sche|für) (HQ-)?Untertitel|German Subtitles|s[0-9]+e[0-9]+|SubCentral|LOST|Staffel [0-9]|Season [0-9]|E N J O Y|\.srt|\.\.::| visit |S u b C e n t r a l . d e|dTV |ripped by|subbed by|Sync by|SD[Il] Media Group|Präsentiert von|Untertitelung|Seite für Untertitel', re.IGNORECASE)
+
+# 3: Editors search (Regexes by Berthold Ulreich)
+unwanted3 = re.compile(ur'willow|staubsauger|datai|maone|angeldream|arigold|buffy2500|dreumex|randall flagg|där fürst|riorizor|mosfilm|sdi media group|zerocl|deepthought42|charlie°|dehoh|urgh! argh|kakarott|crazy.nugget|tv4u|germansubs|opensubtitles|visiontext|tv4user|cimbom1905|maexchen|tvfreaks|delabambi|kristin gerdes|titra-wien|anke watson|fatbrat|velious|siralos|threepwood|zerotollerance|german sdh|eggmaster|mardermann|vicomedia|asenkerschbaumer|hörgeschädigte|gelula|schoker88|staubsauger1000|dagorcai|juppjulasch|subnews|fansub|arigold|wieni07|dagorcai|lord-homer|kezia|l1nk|setup1503|melsmiley|3xtrem3|para\.llax|phiber|jazzhead|ycheah|geysir|cyoo|siralos|revan|schoker|tngs|blubmöp|doggydog|nub4u|swini|ooinsaneoo|redfox|knochenbein|schnapsteufel|lamodus|anddro\+', re.IGNORECASE)
+
+# 4: Rest search (Regexes by Berthold Ulreich)
+unwanted4 = re.compile(ur'(bisher|zuvor|zuletzt)\s(bei|auf)|was bisher geschah', re.IGNORECASE)
 
 # _ ?
 # _ _ / _ _
 # FREMDSPRACHE ?
 # lnstrumentalmusik im Hintergrund
-
 
 ## Regexes by Berthold Ulreich
 #ur'(angepasst|anpassung)([/:]|\s(von|durch)|)',
@@ -50,8 +58,6 @@ unwanted2 = re.compile(ur'(sche|für) (HQ-)?Untertitel|German Subtitles|s[0-9]+e
 #ur'überarbeit(et|ung)([/:]|\s(von|durch)|)',
 #r'(rip|sub|synch?ro|syncroni[sz]ed|sync|transcript|conformed|caption(s|ing))([:/]|\sby)',
 #r'^subti?t?l?e?s?$',
-#r'(bisher|zuvor|zuletzt)\s(bei|auf)',
-#r'was\sbisher\sgeschah'
 #r'^[a-z]$',
 #r'=+-+',
 #ur'präsentiert([:]|\svon)',
@@ -73,7 +79,8 @@ unwanted2 = re.compile(ur'(sche|für) (HQ-)?Untertitel|German Subtitles|s[0-9]+e
 #r'[0-9][0-]/[0-9][0-9][0-9][0-9]',
 #r'hr\.pdtv',
 #ur'^für$',
-#ur'willow|staubsauger|datai|maone|angeldream|arigold|buffy2500|dreumex|randall flagg|där fürst|riorizor|mosfilm|sdi media group|zerocl|deepthought42|charlie°|dehoh|urgh! argh|kakarott|crazy.nugget|tv4u|germansubs|opensubtitles|visiontext|tv4user|cimbom1905|maexchen|tvfreaks|delabambi|kristin gerdes|titra-wien|anke watson|fatbrat|velious|siralos|threepwood|zerotollerance|german sdh|eggmaster|mardermann|vicomedia|asenkerschbaumer|hörgeschädigte|gelula|schoker88|staubsauger1000|dagorcai|juppjulasch|subnews|fansub|arigold|wieni07|dagorcai|lord-homer|kezia|l1nk|setup1503|melsmiley|3xtrem3|para\.llax|phiber|jazzhead|ycheah|geysir|cyoo|siralos|revan|schoker|tngs|blubmöp|doggydog|nub4u|swini|ooinsaneoo|redfox|knochenbein|schnapsteufel|lamodus|anddro\+',
+
+#######
 
 
 # process blacklist
@@ -194,7 +201,7 @@ for filename in listdir(args.inputdir): #  test/ korpus/test/
                 # skip subtitle source announcement
                 # skip subtitles number and times
                 # skip lines where there are more non-word characters than word characters
-                if not subnumber.match(line) and not subtime.match(line) and not unwanted1.match(line) and not unwanted2.search(line) and not len(re.findall(r'[^\w\s]', line)) > len(re.findall(r'[\w\s]', line)) and not len(re.findall(r'[\s]', line)) >= len(re.findall(r'[\w]', line)):
+                if not subnumber.match(line) and not subtime.match(line) and not unwanted1.match(line) and not unwanted2.search(line) and not unwanted3.search(line) and not unwanted4.search(line) and not len(re.findall(r'[^\w\s]', line)) > len(re.findall(r'[\w\s]', line)) and not len(re.findall(r'[\s]', line)) >= len(re.findall(r'[\w]', line)):
 
                     # remove diverse tags
                     # str.replace is much faster
