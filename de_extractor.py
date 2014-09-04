@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+###	This script is part of LACLOS (https://github.com/adbar/laclos).
+###	Copyright (C) Adrien Barbaresi, 2013.
 
 from __future__ import print_function
 import datetime

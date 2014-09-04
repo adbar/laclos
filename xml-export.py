@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+###	This script is part of LACLOS (https://github.com/adbar/laclos).
+###	Copyright (C) Adrien Barbaresi, 2013.
+
 
 ## export the clean subtitles in XML TEI format with the metadata collected from the XMLRPC queries
 

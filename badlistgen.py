@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+###	This script is part of LACLOS (https://github.com/adbar/laclos).
+###	Copyright (C) Adrien Barbaresi, 2013.
+
 # purpose: filter subtitles based on language check results
 # Python3 compatible
 

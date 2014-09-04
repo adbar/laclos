@@ -1,5 +1,7 @@
 #!/bin/bash
 
+###	This script is part of LACLOS (https://github.com/adbar/laclos).
+###	Copyright (C) Adrien Barbaresi, 2013.
 
 ### LOCAL
 

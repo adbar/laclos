@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+###	This script is part of LACLOS (https://github.com/adbar/laclos).
+###	Copyright (C) Adrien Barbaresi, 2013.
+
 from __future__ import print_function
 from __future__ import division
 
