@@ -3,6 +3,7 @@
 
 ###	This script is part of LACLOS (https://github.com/adbar/laclos).
 ###	Copyright (C) Adrien Barbaresi, 2013.
+###	This is free software, licensed under the GNU Lesser General Public License (https://www.gnu.org/licenses/lgpl.html)
 
 
 from __future__ import print_function
@@ -27,7 +28,7 @@ parser.add_argument('--split-sentences', dest='sentsplit', action="store_true", 
 parser.add_argument('--input-dir', dest='inputdir', help='directory where the input files are', required=True)
 parser.add_argument('--output-dir', dest='outputdir', help='directory where the output files are to be stored', required=True)
 parser.add_argument('--blacklist', dest='blacklist', help='file containing the blacklist')
-parser.add_argument('--xml-output', dest='xmloutput', action="store_true", help='split the sentences')
+parser.add_argument('--xml-output', dest='xmloutput', action="store_true", help='XML output')
 args = parser.parse_args()
 
 

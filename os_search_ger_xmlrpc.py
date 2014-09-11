@@ -2,6 +2,7 @@
 
 ###	This script is part of LACLOS (https://github.com/adbar/laclos).
 ###	Copyright (C) Adrien Barbaresi, 2013.
+###	This is free software, licensed under the GNU Lesser General Public License (https://www.gnu.org/licenses/lgpl.html)
 
 
 from __future__ import print_function
@@ -63,7 +64,7 @@ def writefile(filename, listname, append_or_write):
 def the_end():
     print ('## END')
     writefile('os_metadata', metadata, 'a')
-    writefile('os_seen_ids', seen_ids, 'w')
+    writefile('os-xmlrpc_seen_ids', seen_ids, 'w')
     writefile('os_all-infos', infos, 'a')
     end_time = time.time() - start_time
     print ('# Total:\t\t\t', total_count)
@@ -109,7 +110,7 @@ infos = list()
 
 ## settings
 server_url = 'http://api.opensubtitles.org/xml-rpc'
-user_agent = 'OS Test User Agent'
+user_agent = 'LACLOS v0.1'
 language = 'en'
 os_server = xmlrpclib.ServerProxy(server_url)
 

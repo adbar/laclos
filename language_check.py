@@ -3,6 +3,13 @@
 
 ###	This script is part of LACLOS (https://github.com/adbar/laclos).
 ###	Copyright (C) Adrien Barbaresi, 2013.
+###	This is free software, licensed under the GNU Lesser General Public License (https://www.gnu.org/licenses/lgpl.html)
+
+
+# requires the Enchant spellchecking system vailable here: https://pypi.python.org/pypi/pyenchant/
+
+## TODO:
+# python 3 ?
 
 from __future__ import print_function
 from __future__ import division
@@ -20,10 +27,6 @@ spellcheck_de = SpellChecker("de_DE")
 spellcheck_us = SpellChecker("en_US")
 
 import langid
-
-
-## TODO:
-# python 3 ?
 
 
 # argparse

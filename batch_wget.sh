@@ -2,6 +2,7 @@
 
 ###	This script is part of LACLOS (https://github.com/adbar/laclos).
 ###	Copyright (C) Adrien Barbaresi, 2013.
+###	This is free software, licensed under the GNU Lesser General Public License (https://www.gnu.org/licenses/lgpl.html)
 
 ### LOCAL
 
