@@ -18,6 +18,7 @@ import re
 
 
 ## TODO:
+# BROKEN AT LINE 117 !
 # genre ?
 
 
@@ -83,13 +84,16 @@ kind = etree.SubElement(textclass, "kind")
 text = etree.SubElement(root, "text")
 body = etree.SubElement(text, "body")
 
+
 filelist = set()
+testdict = dict()
 
 
 # loop through the existing files
 for filename in listdir(args.inputdir):
     if not re.search(r'.xml$', filename) and not re.search(r'_stats$', filename):
-        match = re.match(r'IMDBid_([0-9]+)_', filename)
+        # match = re.match(r'IMDBid_([0-9]+)_', filename)
+        match = re.match(r'([0-9]+)_', filename)
         if match:
             filelist.add(match.group(1))
 
@@ -103,7 +107,6 @@ with open('os_metadata', 'r') as metadatafh:
         # so basic parsing is an option...
         entry = re.sub('^{|}$', '', entry)
         elements = entry.split(',')
-        testdict = dict()
         for e in elements:
             temp = e.split(': ')
             try:

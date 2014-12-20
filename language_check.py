@@ -69,7 +69,7 @@ def spellcheck_de_us(langtest):
 for filename in listdir(args.dir): # test_langid/ korpus/test/
 
     # sanity check on file name + size (utf-8 ?)
-    if re.match(r'IMDBid_[0-9]+_', filename) and not re.search(r'stats', filename) and not stat(args.dir + filename)[6] == 0:
+    if re.match(r'IMDBid_[0-9]+_', filename) or re.match(r'[0-9]+_[0-9]+', filename) and not re.search(r'stats', filename) and not stat(args.dir + filename)[6] == 0:
 
         # open and read input file
         with open(args.dir + filename, 'r') as f:	# test_langid/ korpus/test/

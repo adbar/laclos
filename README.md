@@ -5,6 +5,14 @@ Copyright (C) Adrien Barbaresi, BBAW (Berlin-Brandenburg Academy of Sciences), 2
 This is free software, licensed under the GNU Lesser General Public License (https://www.gnu.org/licenses/lgpl.html)
 
 
+References
+----------
+
+Adrien Barbaresi. 2014. [Language-classified Open Subtitles (LACLOS): Download, extraction, and quality assessment](https://hal.archives-ouvertes.fr/hal-01083746/document), *technical report*, BBAW.
+
+Adrien Barbaresi & Kay-Michael Würzner. 2014. [For a fistful of blogs: Discovery and comparative benchmarking of republishable German content](https://hal.archives-ouvertes.fr/hal-01083750/document) In *Proceedings of KONVENS 2014, NLP4CMC workshop*, pp.2-10, Hildesheim University Press.
+
+
 Download the subtitles
 ----------------------
 
